@@ -235,7 +235,10 @@ export async function saveEmployee(data: Omit<Employee, "id" | "created_at" | "u
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new Error(errorBody?.detail ?? `API error: ${res.status}`);
+  }
   return res.json();
 }
 
@@ -245,7 +248,10 @@ export async function updateEmployee(id: string, data: Partial<Employee>): Promi
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, ...data }),
   });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new Error(errorBody?.detail ?? `API error: ${res.status}`);
+  }
   return res.json();
 }
 

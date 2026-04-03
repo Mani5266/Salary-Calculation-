@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import SalaryCalculatorPanel from "@/components/SalaryCalculatorPanel";
 import PayslipGenerator from "@/components/PayslipGenerator";
 import PayslipHistoryPanel from "@/components/PayslipHistoryPanel";
-import DashboardPanel from "@/components/DashboardPanel";
+
 import EmployeeDirectory from "@/components/EmployeeDirectory";
 import CTCComparePanel from "@/components/CTCComparePanel";
 import TaxComparePanel from "@/components/TaxComparePanel";
@@ -15,21 +15,6 @@ import type { PayslipHistoryRecord } from "@/lib/payslip-history";
 
 // ─── Sidebar navigation structure ───
 const navGroups = [
-  {
-    label: "Overview",
-    items: [
-      {
-        id: "dashboard",
-        label: "Dashboard",
-        description: "Summary metrics, charts & payroll overview",
-        icon: (
-          <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-          </svg>
-        ),
-      },
-    ],
-  },
   {
     label: "Payroll",
     items: [
@@ -140,7 +125,7 @@ interface TabItem {
 const allTabs: TabItem[] = navGroups.flatMap((g) => [...g.items]);
 
 export default function HomeContent() {
-  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+  const [activeTab, setActiveTab] = useState<TabId>("calculator");
   const [editRecord, setEditRecord] = useState<PayslipHistoryRecord | null>(null);
   const { user, signOut } = useAuth();
   const currentTab = allTabs.find((t) => t.id === activeTab)!;
@@ -253,7 +238,6 @@ export default function HomeContent() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto bg-[var(--bg-base)]">
-          {activeTab === "dashboard" && <DashboardPanel />}
           {activeTab === "calculator" && <SalaryCalculatorPanel />}
           {activeTab === "payslip" && (
             <PayslipGenerator

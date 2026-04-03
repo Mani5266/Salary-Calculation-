@@ -18,26 +18,39 @@ export async function GET() {
   }
 }
 
+// Sanitize employee data: convert empty strings to null for optional fields
+function sanitizeEmployeeData(body: Record<string, unknown>) {
+  const optionalFields = ["email", "employee_code", "designation", "department", "date_of_joining"];
+  const sanitized = { ...body };
+  for (const field of optionalFields) {
+    if (sanitized[field] === "") {
+      sanitized[field] = null;
+    }
+  }
+  return sanitized;
+}
+
 export async function POST(request: Request) {
   try {
     const client = getSupabaseClient();
+    const body = await request.json();
+    const sanitized = sanitizeEmployeeData(body);
+
     if (!client) {
       // Return mock response with generated ID if no Supabase
-      const body = await request.json();
-      return NextResponse.json({ id: crypto.randomUUID(), ...body, created_at: new Date().toISOString() });
+      return NextResponse.json({ id: crypto.randomUUID(), ...sanitized, created_at: new Date().toISOString() });
     }
 
-    const body = await request.json();
     const { data, error } = await client
       .from("employees")
-      .insert(body)
+      .insert(sanitized)
       .select("*")
       .single();
 
     if (error) throw error;
     return NextResponse.json(data);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Failed to save employee";
+    const msg = e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Failed to save employee";
     return NextResponse.json({ detail: msg }, { status: 400 });
   }
 }
@@ -45,16 +58,17 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const client = getSupabaseClient();
-    if (!client) {
-      const body = await request.json();
-      return NextResponse.json({ ...body, updated_at: new Date().toISOString() });
-    }
-
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id, ...rest } = body;
 
     if (!id) {
       return NextResponse.json({ detail: "Employee ID is required" }, { status: 400 });
+    }
+
+    const updates = sanitizeEmployeeData(rest);
+
+    if (!client) {
+      return NextResponse.json({ id, ...updates, updated_at: new Date().toISOString() });
     }
 
     const { data, error } = await client
@@ -67,7 +81,7 @@ export async function PUT(request: Request) {
     if (error) throw error;
     return NextResponse.json(data);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Failed to update employee";
+    const msg = e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Failed to update employee";
     return NextResponse.json({ detail: msg }, { status: 400 });
   }
 }

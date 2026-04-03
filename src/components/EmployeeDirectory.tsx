@@ -58,24 +58,32 @@ export default function EmployeeDirectory() {
     setError("");
 
     try {
+      // Convert empty strings to null to avoid database type/constraint errors
+      const payload = {
+        name: form.name,
+        email: form.email || null,
+        employee_code: form.employee_code || null,
+        designation: form.designation || null,
+        department: form.department || null,
+        date_of_joining: form.date_of_joining || null,
+        annual_ctc: parseFloat(form.annual_ctc),
+        state: form.state,
+        gender: form.gender,
+      };
+
       if (editing) {
-        const updated = await updateEmployee(editing, {
-          ...form,
-          annual_ctc: parseFloat(form.annual_ctc),
-        } as unknown as Partial<Employee>);
+        const updated = await updateEmployee(editing, payload as unknown as Partial<Employee>);
         setEmployees((prev) => prev.map((e) => (e.id === editing ? updated : e)));
       } else {
-        const created = await saveEmployee({
-          ...form,
-          annual_ctc: parseFloat(form.annual_ctc),
-        } as unknown as Omit<Employee, "id" | "created_at" | "updated_at">);
+        const created = await saveEmployee(payload as unknown as Omit<Employee, "id" | "created_at" | "updated_at">);
         setEmployees((prev) => [created, ...prev]);
       }
       setForm(emptyForm);
       setEditing(null);
       setShowForm(false);
-    } catch {
-      setError("Failed to save employee. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(`Failed to save employee: ${message}`);
     } finally {
       setLoading(false);
     }
